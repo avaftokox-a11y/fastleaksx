@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ltc leaks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ltc leaks</h1>
+            <div class="badge">v2.1 // secure</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('user')">user</button>
+            <button class="tab" onclick="switchTab('admin')">admin</button>
+        </div>
+
+        <!-- MODAL PODGLĄDU -->
+        <div class="modal" id="previewModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="previewTitle">podgląd</h3>
+                    <button class="modal-close" onclick="closePreview()">✕</button>
+                </div>
+                <div class="preview-content" id="previewContent"></div>
+                <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end">
+                    <button class="primary" id="previewDownloadBtn">pobierz</button>
+                    <button onclick="closePreview()">zamknij</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL UŻYTKOWNIKA -->
+        <div id="userPanel" class="panel active">
+            <div id="userLoginPanel">
+                <div class="login-section">
+                    <h2>🔐 logowanie</h2>
+                    <div class="field">
+                        <label>klucz licencji</label>
+                        <input type="password" id="userKeyInput" placeholder="np. ADM-IN9">
+                    </div>
+                    <button class="primary" onclick="userLogin()" style="width:100%">zaloguj</button>
+                    <div class="small" style="text-align:center;margin-top:20px;color:#666">
+                        kontakt: krvl_keine (dc)
+                    </div>
+                </div>
+            </div>
+
+            <div id="userFilesPanel" style="display:none">
+                <div class="user-header">
+                    <div class="key-info">
+                        <span>🔑</span>
+                        <span id="userDisplayKey">••••••••</span>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center">
+                        <span class="license-status active" id="licenseBadge">aktywna</span>
+                        <button class="small" onclick="userLogout()">wyloguj</button>
+                    </div>
+                </div>
+
+                <div class="files-section">
+                    <div class="files-header">
+                        <h3>📁 pliki</h3>
+                        <span class="small">wszystkich: <span id="totalFiles">0</span></span>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="searchFiles" placeholder="szukaj..." onkeyup="filterFiles()">
+                    </div>
+
+                    <div class="files-grid" id="filesGrid"></div>
+
+                    <div class="stats-row">
+                        <div>rozmiar bazy: <span id="totalSize">0 MB</span></div>
+                        <div>aktualizacja: <span id="lastUpdate">-</span></div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">
+                    <button class="info" onclick="buyOffer('premium')">premium • 50</button>
+                    <button class="success" onclick="buyOffer('vip')">vip • 100</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL ADMINISTRATORA -->
+        <div id="adminPanel" class="panel">
+            <div id="adminLoginPanel">
+                <div class="login-section">
+                    <h2>⚙️ admin</h2>
+                    <div class="field">
+                        <label>hasło</label>
+                        <input type="password" id="adminPassInput">
+                    </div>
+                    <button class="primary" onclick="adminLogin()" style="width:100%">wejdz</button>
+                </div>
+            </div>
+
+            <div id="adminPanelContent" style="display:none">
+                <div class="admin-section">
+                    <div class="admin-header">
+                        <div class="stats-row">
+                            <div>pliki: <span id="adminFilesCount">0</span></div>
+                            <div>klucze: <span id="adminKeysCount">0</span></div>
+                            <div>rozmiar: <span id="adminTotalSize">0 MB</span></div>
+                        </div>
+                        <button class="small" onclick="adminLogout()">wyloguj</button>
+                    </div>
+
+                    <div class="grid-2">
+                        <!-- GENERATOR KLUCZY -->
+                        <div class="box">
+                            <h3>🔑 generator kluczy</h3>
+                            <div class="field">
+                                <input type="text" id="licenseName" placeholder="nazwa (np. vip)">
+                            </div>
+                            
+                            <div class="duration-selector">
+                                <div class="duration-btn active" onclick="selectDuration(7, this)">7d</div>
+                                <div class="duration-btn" onclick="selectDuration(14, this)">14d</div>
+                                <div class="duration-btn" onclick="selectDuration(30, this)">30d</div>
+                                <div class="duration-btn" onclick="selectDuration(90, this)">90d</div>
+                            </div>
+                            
+                            <button onclick="generateLicense()" style="width:100%">generuj</button>
+                            
+                            <div id="generatedKeyDisplay" class="text-success" style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-top:16px;display:none"></div>
+                            
+                            <div class="key-list" id="keyList"></div>
+                        </div>
+
+                        <!-- DODAWANIE PLIKU -->
+                        <div class="box">
+                            <h3>📤 dodaj plik</h3>
+                            <div class="field">
+                                <input type="text" id="fileName" placeholder="nazwa pliku">
+                            </div>
+                            <div class="field">
+                                <textarea id="fileDesc" placeholder="opis (opcjonalnie)" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="upload-area" id="adminDropZone">
+                                <p><span>kliknij</span> lub przeciągnij plik</p>
+                                <input type="file" id="adminFileInput" style="display:none">
+                            </div>
+                            
+                            <div id="adminFileInfo" class="small" style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-top:12px;display:none"></div>
+                            
+                            <button onclick="uploadFile()" style="width:100%;margin-top:16px" id="uploadBtn" disabled>publikuj</button>
+                            
+                            <div id="uploadStatus" class="small" style="margin-top:12px;text-align:center;color:#888"></div>
+                        </div>
+                    </div>
+
+                    <!-- LISTA PLIKÓW -->
+                    <div class="box" style="margin-top:24px">
+                        <h3>📋 zarządzanie plikami</h3>
+                        <div class="admin-files-list" id="adminFilesList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>ltc leaks // 2024</div>
+            <div><a href="#" onclick="showContact()">krvl_keine</a></div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+</body>
+</html>
